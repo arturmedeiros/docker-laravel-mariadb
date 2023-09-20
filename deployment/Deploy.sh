@@ -167,7 +167,7 @@ services:
     volumes:
       - './backend/:/var/www/html'
       - '.env:/var/www/html/.env'
-    working_dir: /var/www/html/backend
+    working_dir: /var/www/html
     networks:
       - sail
 
