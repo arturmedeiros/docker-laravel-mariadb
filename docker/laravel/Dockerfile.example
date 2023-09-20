@@ -1,0 +1,106 @@
+# Accepted values: 8.2 - 8.1
+ARG PHP_VERSION=8.2.4-fpm-bullseye
+ARG WWWUSER=1000
+ARG WWWGROUP=1000
+
+# Inicia execução
+FROM php:${PHP_VERSION}
+# Diretório da aplicação
+ENV ROOT=/var/www/app
+WORKDIR $ROOT
+
+SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
+
+RUN apt-get update; \
+    apt-get upgrade -yqq; \
+    pecl -q channel-update pecl.php.net; \
+    apt-get install -yqq --no-install-recommends --show-progress \
+          apt-utils \
+          gnupg \
+          gosu \
+          git \
+          curl \
+          wget \
+          libcurl4-openssl-dev \
+          ca-certificates \
+          supervisor \
+          libmemcached-dev \
+          libz-dev \
+          libbrotli-dev \
+          libpq-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libfreetype6-dev \
+          libssl-dev \
+          libwebp-dev \
+          libmcrypt-dev \
+          libonig-dev \
+          libzip-dev zip unzip \
+          libargon2-1 \
+          libidn2-0 \
+          libpcre2-8-0 \
+          libpcre3 \
+          libxml2 \
+          libzstd1 \
+          procps \
+          libbz2-dev
+
+# bzip2
+RUN docker-php-ext-install bz2;
+
+# pdo_mysql
+RUN docker-php-ext-install pdo_mysql;
+
+# zip
+RUN docker-php-ext-configure zip && docker-php-ext-install zip;
+
+# mbstring
+RUN docker-php-ext-install mbstring;
+
+# GD
+RUN docker-php-ext-configure gd \
+            --prefix=/usr \
+            --with-jpeg \
+            --with-webp \
+            --with-freetype \
+    && docker-php-ext-install gd;
+
+# PHP Redis
+RUN pecl -q install -o -f redis \
+      && rm -rf /tmp/pear \
+      && docker-php-ext-enable redis;
+
+# PCNTL
+RUN docker-php-ext-install pcntl;
+
+# BCMath
+RUN docker-php-ext-install bcmath;
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Swoole extension
+ARG SERVER=swoole
+
+RUN apt-get install -yqq --no-install-recommends --show-progress libc-ares-dev \
+      && pecl -q install -o -f -D 'enable-openssl="yes" enable-http2="yes" enable-swoole-curl="yes" enable-mysqlnd="yes" enable-cares="yes"' ${SERVER} \
+      && docker-php-ext-enable ${SERVER};
+
+# Human Language and Character Encoding Support
+RUN apt-get install -yqq --no-install-recommends --show-progress zlib1g-dev libicu-dev g++ \
+      && docker-php-ext-configure intl \
+      && docker-php-ext-install intl;
+
+RUN apt-get clean \
+    && docker-php-source delete \
+    && pecl clear-cache \
+    && rm -R /tmp/pear \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm /var/log/lastlog /var/log/faillog
+
+#COPY start-container /usr/local/bin/start-container
+
+#RUN chmod +x /usr/local/bin/start-container
+
+#ENTRYPOINT ["start-container"]
+
