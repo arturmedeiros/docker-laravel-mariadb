@@ -1,7 +1,7 @@
 # Desenvolvimento
 ### Inicializar localmente primeira vez
 ```shell
-cd .. && bash <(curl -s "https://raw.githubusercontent.com/arturmedeiros/docker-laravel-mariadb/master/deployment/Deploy.sh") && docker exec -it backend sh -c 'composer install && php artisan migrate'
+cd .. && bash <(curl -s "https://raw.githubusercontent.com/arturmedeiros/docker-laravel-mariadb/master/deployment/Deploy.sh?v=2") && docker exec -it backend sh -c 'composer install && php artisan migrate'
 ```
 
 ### Iniciar projeto
